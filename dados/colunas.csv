@@ -1,0 +1,17 @@
+nome_coluna,info
+kwh,kWh (quilowatt-hora)
+moradores,Número de moradores
+graus_dia_frio_f,Graus-dia de frio (65 °F) em 2020
+graus_dia_calor_f,Graus-dia de calor (65 °F) em 2020
+temp_inverno_dia_c,"Temperatura no inverno, de dia, com gente em casa (°C)"
+temp_inverno_noite_c,"Temperatura no inverno, à noite (°C)"
+total_comodos,"Total de cômodos, sem contar banheiros"
+area_casa_m2,Área da casa (m²)
+ventiladores_teto,Ventiladores de teto
+tvs,TVs
+geladeiras,Geladeiras
+freezers,Freezers separados
+microondas,Micro-ondas
+lava_louca,Lava-louça
+maquina_lavar,Máquina de lavar roupa
+secadora,Secadora de roupa
