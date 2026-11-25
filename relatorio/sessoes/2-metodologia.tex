@@ -16,16 +16,14 @@
 Utilizou-se uma base de consumo de energia elétrica residencial com
 $n = 17.179$ domicílios e 16 variáveis numéricas. A variável resposta é o
 consumo em quilowatt-hora (\texttt{kwh}) e as 15 variáveis preditoras se
-dividem em quatro grupos: \emph{moradores} (\texttt{moradores});
+dividem em cinco grupos: \emph{moradores} (\texttt{moradores});
 \emph{clima} (\texttt{graus\_dia\_frio\_f}, \texttt{graus\_dia\_calor\_f},
 \texttt{temp\_inverno\_dia\_c}, \texttt{temp\_inverno\_noite\_c});
 \emph{características do imóvel} (\texttt{total\_comodos},
-\texttt{area\_casa\_m2}); e \emph{quantidade de aparelhos}
-(\texttt{ventiladores\_teto}, \texttt{tvs}, \texttt{geladeiras},
-\texttt{freezers}, \texttt{microondas}, \texttt{lava\_louca},
-\texttt{maquina\_lavar}, \texttt{secadora}). A base foi recebida já
-pré-processada e verificou-se que não há valores ausentes nem registros
-duplicados. % TODO: citar aqui a fonte original dos dados.
+\texttt{area\_casa\_m2}); \emph{quantidade de aparelhos}
+(\texttt{ventiladores\_teto}, \texttt{tvs}, \texttt{geladeiras}, \texttt{freezers}, \texttt{microondas}); e \emph{tem aparelho (1 sim, 0 não)} (\texttt{lava\_louca}, \texttt{maquina\_lavar}, \texttt{secadora}).
+Os dados originais vêm do RECS 2020 \cite{eia2020recs}. O RECS original tem $18.496$ domicílios e $799$ variáveis, foram filtradas $16$ colunas,
+foram removidas as $751$ linhas com $-2$ (não se aplica) na temperatura e as $566$ casas (com \texttt{kwh}) acima de $26.583{,}46$ kWh (outliers). Não há valores ausentes nem registros duplicados.
 \par\endgroup
 
 \section{Regressão linear múltipla}
