@@ -1,74 +1,127 @@
+% =====================================================================
+% SEÇÃO DE METODOLOGIA  (cole dentro do seu documento principal)
+%
+% Pacotes necessários no preâmbulo:
+%   \usepackage[utf8]{inputenc}
+%   \usepackage[T1]{fontenc}
+%   \usepackage[brazil]{babel}
+%   \usepackage{amsmath, amssymb}
+% =====================================================================
+
 \chapter{Metodologia}
-\label{chap:metodo}
 
-A forma de implementação utilizada é o algoritmo de busca A* (A-Estrela), a forma de solução mais conhecida da busca de melhor escolha, que minimiza o custo total estimado da solução.
-As seções a seguir explicam as fórmulas do algoritmo, com base em \citeonline[seção 3.5.2]{ia2013}.
+\section{Base de dados}
 
-\section{Representação do Problema}
-O ambiente do jogo é uma grade, implementada como uma matriz bidimensional $6\times 6$, com $36$ células ou terrenos (malha ou \textit{grid}), como na Figura \ref{fig:gird_game}.
-Cada célula da grade corresponde a um estado, que armazena a posição $(x, y)$, com movimentação de célula em célula (acima, abaixo, esquerda e direita).
-O custo de cada passo é o ``Custo de Energia'' da célula em que o agente entra (Grama $1$, Morro $2$, Água $3$), conforme a Tabela \ref{tab:custo_enegia}. A fórmula de somatório do ``Custo de Energia'' é
-\begin{equation}\sum_{i = 0}^{k}  c(v_i) \end{equation} onde $v_0$ é a entrada, $v_k$ é a saída e $c(v_i)$ é o custo de cada célula do caminho.
-A entrada é a célula $(0,5)$, onde o A* começa, e a saída é a célula $(5,0)$.
+\begingroup\sloppy
+Utilizou-se uma base de consumo de energia elétrica residencial com
+$n = 17.179$ domicílios e 16 variáveis numéricas. A variável resposta é o
+consumo em quilowatt-hora (\texttt{kwh}) e as 15 variáveis preditoras se
+dividem em quatro grupos: \emph{moradores} (\texttt{moradores});
+\emph{clima} (\texttt{graus\_dia\_frio\_f}, \texttt{graus\_dia\_calor\_f},
+\texttt{temp\_inverno\_dia\_c}, \texttt{temp\_inverno\_noite\_c});
+\emph{características do imóvel} (\texttt{total\_comodos},
+\texttt{area\_casa\_m2}); e \emph{quantidade de aparelhos}
+(\texttt{ventiladores\_teto}, \texttt{tvs}, \texttt{geladeiras},
+\texttt{freezers}, \texttt{microondas}, \texttt{lava\_louca},
+\texttt{maquina\_lavar}, \texttt{secadora}). A base foi recebida já
+pré-processada e verificou-se que não há valores ausentes nem registros
+duplicados. % TODO: citar aqui a fonte original dos dados.
+\par\endgroup
 
+\section{Regressão linear múltipla}
 
+Como o objetivo é prever uma grandeza contínua (o consumo em kWh) a partir de
+características do domicílio, adotou-se a regressão linear múltipla, por ser
+simples e interpretável: cada coeficiente indica quanto o consumo varia ao se
+alterar uma variável, mantidas as demais constantes. Uma regressão simples
+seria insuficiente, pois a variável mais correlacionada com o consumo (a área
+da casa, com $r \approx 0{,}39$) explicaria no máximo $r^2 \approx 15\%$ da
+variância; as demais variáveis têm correlações moderadas e complementares. O
+modelo é
+\begin{equation}
+  y_i = \beta_0 + \beta_1 x_{i1} + \dots + \beta_p x_{ip} + \varepsilon_i,
+  \qquad i = 1, \dots, n,
+  \label{eq:modelo}
+\end{equation}
+em que $y_i$ é o consumo do domicílio $i$, $x_{ij}$ é o valor da $j$-ésima
+preditora, $\beta_0$ é o intercepto, $\beta_j$ são os coeficientes,
+$\varepsilon_i$ é o erro aleatório e $p = 15$.
 
-\section{Definição}
-Foi implementado o estado do jogo para o núcleo do algoritmo A* (A-Estrela). Foram definidas as seguintes variáveis, como na Figura \ref{fig:code_estado}:
+\paragraph{Por que um hiperplano.} Com $p = 1$ preditora, a
+Equação~\eqref{eq:modelo} descreve uma reta no plano $(x, y)$; com $p = 2$,
+um plano no espaço $(x_1, x_2, y)$. Em geral, os pontos
+$(x_1, \dots, x_p, \hat{y})$ que satisfazem uma equação linear nas $p$
+preditoras formam um subespaço de dimensão $p$ dentro de um espaço de
+dimensão $p + 1$, ou seja, com uma dimensão a menos que o espaço que o contém.
+Isso é, por definição, um hiperplano. Aqui os dados vivem em um espaço de
+$16$ dimensões (15 preditoras mais o consumo) e a superfície ajustada é um
+hiperplano de dimensão $15$; a reta da regressão simples é o caso particular
+$p = 1$. Por isso a equação obtida não pode ser desenhada como uma única reta
+em um gráfico bidimensional.
 
-\begin{itemize}
-    \item \textbf{Pai / predecessor $\boldsymbol{\pi}$:} guarda uma referência ao estado para reconstruir o caminho do estado de saída de volta até o estado de entrada;
-    \item \textbf{$\boldsymbol{g(v)}$:} é o custo real acumulado do estado de entrada até o estado $v$;
-    \item \textbf{$\boldsymbol{h(v)}$:} é a heurística para estimar a distância do estado $v$ até o estado de saída, utilizando a distância de Manhattan;
-    \item \textbf{$\boldsymbol{f(v)}$:} é a prioridade do estado, o custo estimado da solução de menor gasto de energia que passa por $v$, dada pela fórmula:
-          \begin{equation} f(v) = g(v) + h(v) \end{equation}
-\end{itemize}
+\section{Estimação e treinamento}
 
-\begin{figure}[H]
-    \centering
-    \caption{Classe Estado em \textit{GDScript}}
-    \label{fig:code_estado}
-    \setlength{\fboxsep}{0pt}
-    \fbox{\includegraphics[width=0.99\textwidth]{figuras/scripts/code_estado.png}}
-    \fonte{Elaborado pelos autores (2026).}
-\end{figure}
+Os coeficientes são estimados pelo método dos mínimos quadrados ordinários,
+que minimiza a soma dos quadrados dos resíduos:
+\begin{equation}
+  \hat{\boldsymbol{\beta}} = \arg\min_{\boldsymbol{\beta}}
+  \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
+  = (\mathbf{X}^{\top}\mathbf{X})^{-1}\mathbf{X}^{\top}\mathbf{y},
+  \label{eq:mqo}
+\end{equation}
+em que $\mathbf{X}$ é a matriz de preditoras (com uma coluna de uns para o
+intercepto) e $\mathbf{y}$ o vetor de consumos. A implementação foi feita em
+Python com a classe \texttt{LinearRegression} do \texttt{scikit-learn}, que
+resolve o problema por decomposição em valores singulares, numericamente mais
+estável que inverter $\mathbf{X}^{\top}\mathbf{X}$.
 
-\section{Aplicação da Heurística}
-A heurística escolhida é a distância de Manhattan no algoritmo A*, a soma das distâncias da posição até a saída. O movimento é proibido ao longo de diagonais, então a distância contada é a soma das horizontais e verticais:
-\begin{equation} h(v) =  |x_s - x_v| + |y_s - y_v| \end{equation}
-onde $(x_v,y_v)$ é a posição do estado $v$ e $(x_s,y_s)$ é a posição do estado de saída. Essa heurística é otimista \cite[seção 3.6]{ia2013}.
+Os dados foram divididos aleatoriamente em 80\% para treino (13.743
+domicílios) e 20\% para teste (3.436), com semente fixa
+(\texttt{random\_state = 42}) para garantir reprodutibilidade. O modelo foi
+ajustado apenas com o conjunto de treino; o de teste serviu para medir o
+desempenho em dados não vistos. Não houve padronização das variáveis, pois
+ela não altera as previsões da regressão por mínimos quadrados e, sem ela, os
+coeficientes permanecem nas unidades originais (por exemplo, kWh por
+morador). Além disso, aplicou-se validação cruzada com 5 partições sobre a
+base completa, reportando-se a média e o desvio padrão do $R^2$.
 
-\newpage
+\section{Métricas de avaliação}
 
-\section{A* (A-Estrela)}
-O algoritmo foi adaptado, conforme a Figura \ref{fig:code_aestrela}, para que o custo inicial $g$ do estado de entrada corresponda ao valor da célula de partida, conforme as regras do jogo:
+Sejam $y_i$ o valor observado, $\hat{y}_i$ o previsto, $\bar{y}$ a média dos
+valores observados, $n$ o número de amostras avaliadas e $p$ o número de
+preditoras. As métricas foram calculadas nos conjuntos de treino e de teste:
 
-\begin{figure}[h]
-    \centering
-    \caption{Função A* sem cálculo de estatísticas em \textit{GDScript}}
-    \label{fig:code_aestrela}
-    \setlength{\fboxsep}{0pt}
-    \fbox{\includegraphics[width=0.99\textwidth]{figuras/scripts/code_aestrela_sem_stats.png}}
-    \fonte{Elaborado pelos autores e adaptado do Laboratório 3 da disciplina (2026).}
-\end{figure}
+\begin{description}
+  \item[MSE (erro quadrático médio)] $= \frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2$.
+  Média dos quadrados dos erros, em kWh\textsuperscript{2}. Penaliza muito
+  mais os erros grandes e é a quantidade que o método dos mínimos quadrados
+  minimiza.
 
-\begin{itemize}
-    \item \textbf{Fila de prioridade:} foi implementada a fila de prioridade, pois a linguagem GDScript (Godot) não possui uma estrutura pronta. Ela possui as funções enfileirar, que armazena o estado na posição certa pela prioridade $f(v)$, e desenfileirar, que retira o primeiro da fila, o de menor $f(v)$. Na busca A*, utiliza-se $f$ em vez de $g$ para ordenar a fila de prioridade \cite[seção 3.5]{ia2013}.
-    \item \textbf{Início:} o estado de entrada, com $g$ igual ao custo da célula e $h$ pela distância de Manhattan, entra na fila.
-    \item \textbf{Repetição:} enquanto a fila não está vazia, retira o estado de menor $f$.
-          \begin{itemize}
-              \item Se já foi visitado, descarta.
-              \item Se é a saída, termina.
-          \end{itemize}
-    \item \textbf{Vizinhos:} para cada vizinho $u$, o novo custo é $g(v) + c(u)$. Se for menor que o custo já conhecido, guarda o novo custo e coloca $u$ na fila.
-    \item \textbf{Reconstruir caminho:} a função recebe o estado final e reconstrói o caminho pelo atributo pai (predecessor $\pi$) e guarda as posições num vetor. Um laço percorre os estados da saída até a entrada, e a função retorna o caminho invertido, conforme a Figura \ref{fig:code_reconstruir_caminho}.
-\end{itemize}
+  \item[RMSE (raiz do erro quadrático médio)] $= \sqrt{\mathrm{MSE}}$.
+  Volta à unidade original (kWh) e pode ser lida como o erro típico do
+  modelo, com maior peso para os erros grandes.
 
-\begin{figure}[h]
-    \centering
-    \caption{Função Reconstruir Caminho em \textit{GDScript}}
-    \label{fig:code_reconstruir_caminho}
-    \setlength{\fboxsep}{0pt}
-    \fbox{\includegraphics[width=0.75\textwidth]{figuras/scripts/code_reconstruir_caminho.png}}
-    \fonte{Elaborado pelos autores (2026).}
-\end{figure}
+  \item[MAE (erro absoluto médio)] $= \frac{1}{n}\sum_{i=1}^{n}\lvert y_i - \hat{y}_i\rvert$.
+  Quanto o modelo erra, em kWh, em média, para mais ou para menos. É menos
+  sensível a valores extremos que o RMSE; um RMSE muito maior que o MAE indica
+  a presença de alguns erros grandes.
+
+  \item[$R^2$ (coeficiente de determinação)] $= 1 - \dfrac{\sum_{i}(y_i - \hat{y}_i)^2}{\sum_{i}(y_i - \bar{y})^2}$.
+  Proporção da variância do consumo explicada pelo modelo, comparando seu erro
+  com o de um modelo ingênuo que sempre prevê a média: $R^2 = 1$ indica
+  previsão perfeita, $R^2 = 0$ indica desempenho igual ao de prever a média, e
+  valores negativos (possíveis no teste) indicam desempenho pior que isso.
+
+  \item[$R^2$ ajustado] $= 1 - (1 - R^2)\dfrac{n - 1}{n - p - 1}$.
+  Desconta o número de preditoras. O $R^2$ comum nunca diminui ao se adicionar
+  uma variável, mesmo irrelevante; o ajustado só aumenta se a variável melhora
+  o modelo mais do que o esperado ao acaso.
+
+  \item[$R^2$ da validação cruzada] Média e desvio padrão do $R^2$ nas 5
+  partições. Uma média próxima do $R^2$ de teste e um desvio pequeno indicam
+  que o desempenho não depende de uma divisão particular dos dados.
+\end{description}
+
+Comparar as métricas de treino e de teste também permite detectar
+sobreajuste: se o desempenho no treino for muito superior ao do teste, o
+modelo está memorizando os dados em vez de generalizar.
