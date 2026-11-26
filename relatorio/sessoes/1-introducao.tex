@@ -1,0 +1,18 @@
+\chapter{Introdução}
+
+O consumo de energia elétrica muda de uma casa para outra. Ele depende dos
+moradores, do clima, do tamanho da casa e dos aparelhos.
+
+Este trabalho utiliza aprendizado supervisionado \cite{ia2013}, no qual o algoritmo recebe
+pares de entrada e saída para aprender uma função $h$, que estima o consumo de energia para entradas novas.
+Aqui a saída é o consumo em kWh, um valor contínuo. Por isso, o
+problema é de regressão.
+
+O objetivo é prever o consumo anual de cada casa com regressão linear
+múltipla. Nela, $h$ soma as entradas multiplicadas por pesos, e os pesos são
+escolhidos para deixar o erro de previsão o menor possível. Os dados vêm do
+RECS 2020, uma pesquisa da U.S. Energy Information Administration com casas
+dos Estados Unidos \cite{eia2020recs}.
+
+O Capítulo~2 mostra os dados e o modelo. O Capítulo~3 mostra os resultados, e
+o Capítulo~4, a conclusão.
